@@ -12,12 +12,13 @@ from models import CancelBooking,HistoryRequest
 
 app = FastAPI()
 
-origins=["https://bus-travel-backend.onrender.com"]
+origins=[
+    "https://bus-travel-backend.onrender.com"
+    ]
 
 # Allow frontend HTML to call backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
