@@ -20,6 +20,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def read_root():
+    return {"message": "API working"}
+
 @app.post("/booking-history")
 def booking_history(data: HistoryRequest):
 
