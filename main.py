@@ -2,13 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-from db import users_collection, contacts_collection
 from models import RegisterUser, LoginUser, ContactMessage, ResetPassword
 from auth import hash_password, verify_password, create_access_token
 from db import users_collection, contacts_collection, bookings_collection
-from models import RegisterUser, LoginUser, ContactMessage, ResetPassword, BookingRequest
+from models import RegisterUser, LoginUser, ContactMessage, ResetPassword, BookingRequest, CancelBooking,HistoryRequest
 from bson import ObjectId
-from models import CancelBooking,HistoryRequest
+
 
 app = FastAPI()
 
@@ -24,10 +23,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.get("/")
-def read_root():
-    return {"message": "API working"}
 
 @app.post("/booking-history")
 def booking_history(data: HistoryRequest):
