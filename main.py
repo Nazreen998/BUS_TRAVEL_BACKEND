@@ -43,60 +43,7 @@ def booking_history(data: HistoryRequest):
         b["_id"] = str(b["_id"])
 
     return bookings
-@app.post("/book-seat")
-def book_seat(data: BookingRequest):
 
-    # 1️⃣ user check
-    user = users_collection.find_one({"username": data.username})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if not data.seats:
-        raise HTTPException(status_code=400, detail="Seats required")
-
-    # 2️⃣ SAME USER – pending booking check
-    existing_pending = bookings_collection.find_one({
-        "username": data.username,
-        "route": data.route,
-        "status": "PENDING_PAYMENT"
-    })
-
-    if existing_pending:
-        return {
-            "message": "Already booking pending 💳",
-            "booking_id": str(existing_pending["_id"]),
-            "status": "PENDING_PAYMENT"
-        }
-
-    # 3️⃣ SEAT already booked check
-    seat_taken = bookings_collection.find_one({
-        "route": data.route,
-        "status": {"$in": ["PENDING_PAYMENT", "CONFIRMED"]},
-        "seats": {"$in": data.seats}
-    })
-
-    if seat_taken:
-        raise HTTPException(
-            status_code=400,
-            detail="Some seats already booked ❌"
-        )
-
-    # 4️⃣ create new booking
-    doc = {
-        "username": data.username,
-        "route": data.route,
-        "seats": data.seats,
-        "status": "PENDING_PAYMENT",
-        "createdAt": datetime.utcnow()
-    }
-
-    result = bookings_collection.insert_one(doc)
-
-    return {
-        "message": "Booking saved ✅",
-        "booking_id": str(result.inserted_id),
-        "status": "PENDING_PAYMENT"
-    }
 @app.get("/booked-seats/{route}")
 def get_booked_seats(route: str):
 
@@ -201,10 +148,12 @@ def register(user: RegisterUser):
 # ✅ Login API
 @app.post("/login")
 def login(user: LoginUser):
-
     db_user = users_collection.find_one({"username": user.username})
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if len(user.password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=400, detail="Password too long")
 
     if not verify_password(user.password, db_user["passwordHash"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
@@ -220,8 +169,6 @@ def login(user: LoginUser):
         "token_type": "bearer",
         "username": db_user["username"]
     }
-
-
 # ✅ Reset Password API
 @app.post("/reset-password")
 def reset_password(data: ResetPassword):
