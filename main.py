@@ -1,8 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 
-from models import RegisterUser, LoginUser, ContactMessage, ResetPassword
 from auth import hash_password, verify_password, create_access_token
 from db import users_collection, contacts_collection, bookings_collection
 from models import RegisterUser, LoginUser, ContactMessage, ResetPassword, BookingRequest, CancelBooking,HistoryRequest
@@ -30,7 +29,7 @@ def booking_history(data: HistoryRequest):
     bookings = list(
         bookings_collection.find(
             {"username": data.username},
-            {"_id": 1, "route": 1, "seats": 1, "status": 1, "createdAt": 1}
+            {"_id": 1, "route": 1, "seats": 1, "status": 1, "createdAt": 1, "travel_date": 1}
         ).sort("createdAt", -1)
     )
 
@@ -40,10 +39,11 @@ def booking_history(data: HistoryRequest):
     return bookings
 
 @app.get("/booked-seats/{route}")
-def get_booked_seats(route: str):
+def get_booked_seats(route: str, travel_date: str = Query(...)):
 
     bookings = bookings_collection.find({
         "route": route,
+        "travel_date": travel_date,
         "status": {"$in": ["PENDING_PAYMENT", "CONFIRMED"]}
     })
 
@@ -95,6 +95,7 @@ def book_seat(data: BookingRequest):
         "username": data.username,
         "route": data.route,
         "seats": data.seats,
+        "travel_date": data.travel_date,
         "status": "PENDING_PAYMENT",
         "createdAt": datetime.utcnow()
     }

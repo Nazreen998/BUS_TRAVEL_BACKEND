@@ -5,6 +5,7 @@ class BookingRequest(BaseModel):
     username: str
     route: str
     seats: List[int]
+    travel_date: str
     
 class CancelBooking(BaseModel):
     booking_id: str
